@@ -13,6 +13,6 @@ Overview
 	
 	fileutils        - basic file utilities, getting the basename easily, find if a file is under a path etc
 	
-	flagutils        - get a command line argument or exist showing an error message
+	flagutils        - get a command line argument or exit showing an error message
 	
 	jsonutils        - convert a multiline string into json formatted multiline string, add the jsonp http header
