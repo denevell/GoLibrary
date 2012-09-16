@@ -16,6 +16,3 @@ Overview
 	flagutils        - get a command line argument or exist showing an error message
 	
 	jsonutils        - convert a multiline string into json formatted multiline string, add the jsonp http header
-	
-	server           - generic server soon to be removed since it's been imported into dirparser/server
-
