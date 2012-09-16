@@ -3,30 +3,30 @@
 // {
 //    "ValueMap": {
 //        "DirName": "OurDir",
-//        "onefile.go": "file content"
-//        "another.go": "file content"
+//        "onefile.go": "onefile.go"
+//        "another.go": "another.go"
 //    },
 //    "Children": [{
 //        "ValueMap": {
 //            "DirName": "ASubDir",
-//            "afile.go": "file content"
+//            "afile.go": "ASubDir/afile.go"
 //        },
 //        "Children": []
 //    }, {
 //        "ValueMap": {
 //            "DirName": "AnotherSubDir",
-//            "anotherfile.go": "file content"
+//            "anotherfile.go": "AontherSubDir/anotherfile.go"
 //        },
 //        "Children": []
 //    }]
 // }
 //
-// This will obviously freak out if you parse a directory with too many files
 package dirparser
 
 import (
 	"path/filepath"
 	"fileutils"
+	"strings"
 	"log"
 	"encoding/json"	
 )
@@ -39,8 +39,9 @@ type DirTree struct {
 }
 
 // Takes a dir, and gives back a DirTree with all its files, recursively
-// through the sub directories 
-func ParseDir(path string) DirTree {
+// through the sub directories.
+// The output will have paths for the files. relativePath says from where they should start.
+func ParseDir(relativePath string, path string) DirTree {
 	node := DirTree{make(map[string]string), []DirTree{}}
 
 	files, _ := filepath.Glob(path + "*")
@@ -50,13 +51,14 @@ func ParseDir(path string) DirTree {
 	}
 	
 	node.ValueMap["DirName"] = fileutils.Create(path).Basename()	
-	node = parseAllFiles(files, node)
+	node = parseAllFiles(relativePath, files, node)
 	
 	return node
 }
 
 // Adds all the files, and directories, onto the DirTree passed
-func parseAllFiles(files []string, currentNode DirTree) DirTree {
+// relativePath is used to say from where the file path should start.
+func parseAllFiles(relativePath string, files []string, currentNode DirTree) DirTree {
 	for _, file := range files {
 		of := fileutils.Create(file)
 		if of==nil {
@@ -64,19 +66,19 @@ func parseAllFiles(files []string, currentNode DirTree) DirTree {
 		}
 		log.Println("PARSING: " + file)
 		if of.IsDir() {
-			child := ParseDir(file + "/")
+			child := ParseDir(relativePath, file + "/")
 			currentNode.Children = append(currentNode.Children, child)
 		} else {		
-			currentNode.ValueMap[of.Basename()] = of.GetContentOfFile()
+			file = strings.Replace(file, relativePath, "", -1)
+			currentNode.ValueMap[of.Basename()] = file//of.GetContentOfFile()
 		}	
 	}
 	return currentNode
 }
 
 // This will freak out if you're trying to print non-UTF8 characters
-// I.e. you're trying to print out a binary in JSON
 func (parsed *DirTree) ToJson() string {
-	j, err := json.Marshal(parsed)
+	j, err := json.MarshalIndent(parsed, " ", "    ")
 	if err!=nil {
 		log.Println("JSON ERROR: " + err.Error())
 		return "JSON ERROR: " + err.Error()

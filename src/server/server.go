@@ -1,51 +1,53 @@
+// Generic server that serves an index page
+// To be removed/refactored
 package server
 
 import (
-	"os"
+	"fileutils"
 	"fmt"
 	"log"
 	"net/http"
-	"fileutils"
+	"os"
 )
 
 type ContentFunction func() string
 
 type ServerInfo struct {
 	IndexFileLocation string
-	ContentFunction ContentFunction
-	Port string
+	Port              string
 }
 
 func (serverInfo *ServerInfo) StartServer() {
-    var c chan string = make(chan string) //playing around with channels for no reason
-    go checkForSomething(c)
+	//    var c chan string = make(chan string) //playing around with channels for no reason
+	//    go checkForSomething(c)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("REQUESTED: " + r.URL.RequestURI())
-		log.Println("REQUESTED: " + r.URL.Path)
 
-		if r.URL.RequestURI() == "/index" {
+		switch val := r.URL.Path; {
+		case val == "/index":
 			f, _ := os.Open(serverInfo.IndexFileLocation)
 			of := fileutils.FileUtilType{*f}
-			content := of.GetContentOfFile()
+			content := of.ContentOfFile()
 			fmt.Fprintf(w, "%s", string(content))
-		} else if r.URL.RequestURI() == "/" {
-			j := serverInfo.ContentFunction()
-			fmt.Fprintf(w, "%s", j)
-		} else if r.URL.RequestURI() == "/quit" {
+		case val == "/quit":
 			os.Exit(0)
-		} else if r.URL.Path == "/s" { //playing around with channels for no reason
-			c <- r.URL.RequestURI()
-			fmt.Fprintf(w, "hiii")
+			//			case val=="/s":
+			//				if file := r.URL.Query()["thing"]; len(file)>0 {
+			//					c <- r.URL.Query()["thing"][0]
+			//					fmt.Fprintf(w, "hiii")
+			//				}			
 		}
 	})
 	log.Println("Starting server...")
-	http.ListenAndServe(":"+serverInfo.Port, nil)
+	if err := http.ListenAndServe(":"+serverInfo.Port, nil); err != nil {
+		log.Println(err)
+	}
 }
 
 func checkForSomething(c chan string) { //playing around with channels for no reason
 	for {
-		msg := <- c
+		msg := <-c
 		log.Println(msg)
 	}
 }

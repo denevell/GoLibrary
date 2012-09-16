@@ -1,12 +1,15 @@
+// Some utility methods for os.File
 package fileutils
 
 import (
 	"os"
 	"log"
 	"io/ioutil"
+	"strings"
 	"path/filepath"
 )
 
+// Simply extends os.File
 type FileUtilType struct {
 	os.File
 }
@@ -33,7 +36,7 @@ func (f *FileUtilType) IsDir() bool {
 	return isDir
 }
 
-func (f *FileUtilType) GetContentOfFile() string {
+func (f *FileUtilType) ContentOfFile() string {
 	ff, err := ioutil.ReadAll(f)
 	if err!=nil {
 		log.Println("ERROR READING FILE:" + err.Error())
@@ -48,4 +51,14 @@ func (f *FileUtilType) Basename() string {
 	filename := filestat.Name()
 	basename := filepath.Base(filename)
 	return basename
+}
+
+// Cleans all the relative paths, eg .., and then checks to see
+// if we're in such a directory.
+// Used for security purposes - we don't want the user going back in the directory stack
+func (f *FileUtilType) IsInDirectory(dir string) bool{
+	filename := f.Name()
+	p := filepath.Clean(filename)
+	b := strings.HasPrefix(p, dir)
+	return b;
 }
