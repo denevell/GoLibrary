@@ -24,10 +24,10 @@ type ServerInfo struct {
 
 // Implementation of http.Handler, to pass to http.ListenAndServe, 
 // which is used in ServerInfo.StartServer. 
-// /             - Pass the JSON of the parsed directory
-// /jsonp?q=func - do as '/' but wrap in a javascript function specified as parameter 'q'
-// /quit         - kill the server
-// /file?file    - read the file after ? with the ServerInfo.RelativeFilePath directory 
+// /               - Pass the JSON of the parsed directory
+// /quit           - kill the server
+// /file?p=file    - read the file after ? with the ServerInfo.RelativeFilePath directory 
+// You can add q=func to / and /file to return the values as jsonp
 func (serverInfo *ServerInfo) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println("REQUESTED on dirserver: " + r.URL.RequestURI())
 		jsonutils.SetJsonHeader(&w)
